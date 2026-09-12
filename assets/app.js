@@ -66,41 +66,56 @@ function paintHero() {
   const range = Math.max(1, hero.offsetHeight - innerHeight);
   const p = clamp(-rect.top / range);
 
-  const introOut = 1 - smooth(.07, .20, p);
+  // Phase 1: the headline owns the first screen. The phone sits fully centered beneath it.
+  const introOut = 1 - smooth(.075, .19, p);
   copy.style.opacity = introOut;
-  copy.style.transform = `translate3d(0,${mix(0, -70, smooth(.06,.22,p))}px,0) scale(${mix(1,.96,smooth(.06,.22,p))})`;
-  copy.style.pointerEvents = p < .15 ? 'auto' : 'none';
+  copy.style.transform = `translate3d(-50%,${mix(0, -48, smooth(.055,.20,p))}px,0) scale(${mix(1,.975,smooth(.055,.20,p))})`;
+  copy.style.pointerEvents = p < .14 ? 'auto' : 'none';
 
-  let scale;
-  if (p < .28) scale = mix(1.46, .86, smooth(.02,.28,p));
-  else scale = mix(.86, .70, smooth(.28,.72,p));
-  const y = p < .25 ? mix(39, 4, smooth(0,.25,p)) : mix(4, 1, smooth(.25,.70,p));
-  const x = mix(0, -17, smooth(.47,.72,p)) + mix(0, 30, smooth(.78,.97,p));
-  const rot = mix(0, -7, smooth(.33,.60,p)) + mix(0, 10, smooth(.77,.96,p));
-  phone.style.transform = `translate3d(${x}vw,${y}vh,0) scale(${scale}) rotateY(${rot}deg)`;
-  phone.style.opacity = 1 - smooth(.91,.99,p);
+  // Phase 2: lift the phone straight into the center — never off to a side.
+  const mobile = innerWidth <= 560;
+  const tablet = innerWidth <= 900;
+  const settle = smooth(.035, .235, p);
+  const initialScale = mobile ? .56 : (tablet ? .58 : .60);
+  const focusScale = mobile ? .79 : (tablet ? .81 : .84);
+  const liftVh = mobile ? -45 : (tablet ? -45 : -44);
+  const scale = p < .72 ? mix(initialScale, focusScale, settle) : mix(focusScale, focusScale * .95, smooth(.72,.86,p));
+  const y = mix(0, liftVh, settle) + mix(0, -1.5, smooth(.42,.72,p));
+  const rotX = mix(0, -1.2, smooth(.26,.48,p)) + mix(0, 1.2, smooth(.55,.76,p));
+  const phoneOut = smooth(.82,.915,p);
+  phone.style.transform = `translate3d(0,${y}vh,0) scale(${scale}) rotateX(${rotX}deg)`;
+  phone.style.opacity = 1 - phoneOut;
+  phone.style.filter = `blur(${mix(0,8,phoneOut)}px)`;
 
-  wordText.style.opacity = windowed(p,.17,.24,.36,.43);
-  wordText.style.transform = `translate3d(${mix(-10,0,smooth(.17,.25,p))}vw,${mix(30,0,smooth(.17,.25,p))}px,0)`;
-  wordConfirm.style.opacity = windowed(p,.40,.47,.60,.68);
-  wordConfirm.style.transform = `translate3d(${mix(10,0,smooth(.40,.48,p))}vw,0,0)`;
-  wordLive.style.opacity = windowed(p,.67,.74,.88,.95);
-  wordLive.style.transform = `scale(${mix(.88,1,smooth(.67,.76,p))})`;
+  // Large kinetic words remain centered behind the device.
+  const textIn = windowed(p,.19,.265,.36,.445);
+  wordText.style.opacity = textIn;
+  wordText.style.transform = `translateX(-50%) translateY(${mix(34,0,smooth(.19,.28,p))}px) scale(${mix(.94,1,smooth(.19,.28,p))})`;
 
-  const cardOpacity = windowed(p,.40,.50,.75,.84);
+  const confirmIn = windowed(p,.41,.49,.60,.69);
+  wordConfirm.style.opacity = confirmIn;
+  wordConfirm.style.transform = `translateX(-50%) translateY(${mix(26,0,smooth(.41,.50,p))}px) scale(${mix(.95,1,smooth(.41,.50,p))})`;
+
+  const liveWordIn = windowed(p,.66,.735,.83,.90);
+  wordLive.style.opacity = liveWordIn;
+  wordLive.style.transform = `translateX(-50%) translateY(${mix(22,0,smooth(.66,.75,p))}px) scale(${mix(.94,1,smooth(.66,.75,p))})`;
+
+  const cardOpacity = windowed(p,.385,.49,.70,.80);
   cards.forEach((card, i) => {
     if (!card) return;
     card.style.opacity = cardOpacity;
     const sign = i === 1 ? 1 : -1;
-    card.style.transform = `translate3d(0,${mix(40,0,smooth(.41 + i*.02,.54 + i*.02,p))}px,0) rotate(${sign * mix(4,0,smooth(.43,.58,p))}deg)`;
+    const rise = smooth(.40 + i*.018,.525 + i*.018,p);
+    card.style.transform = `translate3d(0,${mix(38,0,rise)}px,0) rotate(${sign * mix(3.5,0,rise)}deg) scale(${mix(.96,1,rise)})`;
   });
 
-  const receiptIn = smooth(.82,.91,p);
+  // Final phase: the phone dissolves and the onchain receipt replaces it in the same center line.
+  const receiptIn = smooth(.825,.91,p);
   liveReceipt.style.opacity = receiptIn;
-  liveReceipt.style.transform = `translate3d(${mix(20,0,receiptIn)}vw,${mix(40,0,receiptIn)}px,0) scale(${mix(.92,1,receiptIn)})`;
+  liveReceipt.style.transform = `translateX(-50%) translateY(${mix(42,0,receiptIn)}px) scale(${mix(.92,1,receiptIn)})`;
 
   bubbles.forEach((bubble, i) => {
-    const start = .22 + i * .065;
+    const start = .205 + i * .067;
     const show = smooth(start, start + .045, p);
     bubble.style.opacity = show;
     bubble.style.transform = `translateY(${mix(14,0,show)}px) scale(${mix(.98,1,show)})`;
