@@ -5,8 +5,12 @@
   "functions": {
     "api/sms.js": { "maxDuration": 60 },
     "api/test-message.js": { "maxDuration": 30 },
-    "api/status.js": { "maxDuration": 30 }
+    "api/status.js": { "maxDuration": 30 },
+    "api/claim/[token].js": { "maxDuration": 30 }
   },
+  "rewrites": [
+    { "source": "/claim/:token", "destination": "/claim/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

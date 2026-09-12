@@ -23,6 +23,7 @@
       <a href="#need">What you need</a>
       <a href="#conversation">The conversation</a>
       <a href="#review">Before you confirm</a>
+      <a href="#wallet">Approving in your wallet</a>
       <a href="#after">After launch</a>
       <a href="#commands">Useful commands</a>
       <a href="#faq">FAQ</a>
@@ -42,7 +43,8 @@
           <li><b>Answer the prompts.</b><span>One question at a time. Reply SKIP when an optional field doesn't apply.</span></li>
           <li><b>Review your token.</b><span>Check the name, ticker, links, wallet and launch settings.</span></li>
           <li><b>Reply CONFIRM.</b><span>Nothing launches before this final message.</span></li>
-          <li><b>Get your live link.</b><span>We'll text the token details back to the same thread.</span></li>
+          <li><b>Tap your launch link.</b><span>We'll text you a secure link. Open it and approve the transaction in your own wallet.</span></li>
+          <li><b>Get your live confirmation.</b><span>Once your wallet's transaction confirms onchain, we text the token details back to the same thread.</span></li>
         </ol>
         <a class="docs-big-cta sms-link" href="#">Text LAUNCH <span>↗</span></a>
       </section>
@@ -75,7 +77,9 @@
 <span class="muted-code">LAUNCH/SMS</span>  Here's your final review.
            Reply CONFIRM to launch.
 <span class="g">YOU</span>      CONFIRM
-<span class="muted-code">LAUNCH/SMS</span>  You're live ✓</code></div>
+<span class="muted-code">LAUNCH/SMS</span>  Your token is ready. Tap to launch:
+           launchsms.fun/claim/…
+<span class="muted-code">LAUNCH/SMS</span>  LIVE ✓ — Orbit · $ORBIT</code></div>
       </section>
 
       <section id="review">
@@ -90,9 +94,14 @@
         <div class="callout"><strong>Important:</strong> blockchain launches can be irreversible. If anything looks wrong, reply <code>BACK</code> before you confirm.</div>
       </section>
 
+      <section id="wallet">
+        <h2>Approving in your wallet</h2>
+        <p>LAUNCH/SMS never holds your keys or your funds. After you reply CONFIRM, we text you a one-time link to a launch page. Opening it and tapping the button opens your own wallet app (MetaMask, Rabby, Coinbase Wallet, or similar) with the exact Pons launch transaction pre-filled. You review and approve it yourself — the same way you would on Pons' own site. We watch the chain for your transaction and text you the result. The link expires 30 minutes after it's sent.</p>
+      </section>
+
       <section id="after">
         <h2>After launch</h2>
-        <p>Once your launch completes, the same message thread sends back your live token details, including the token address and launch link.</p>
+        <p>Once your wallet's transaction confirms onchain, the same message thread sends back your live token details, including the token address and launch link.</p>
         <div class="status-grid customer-status">
           <div class="status-card"><small>STATUS</small><b>LIVE ✓</b></div>
           <div class="status-card"><small>NETWORK</small><b>Robinhood Chain</b></div>
@@ -118,8 +127,10 @@
         <p>No. You use your normal SMS/Messages app.</p>
         <h3>Do I need an X account?</h3>
         <p>No. Social links are optional. You provide the token details directly.</p>
-        <h3>Do I need a wallet app open?</h3>
-        <p>No. You do need a valid EVM address if you want to receive creator fees.</p>
+        <h3>Do I need a wallet app?</h3>
+        <p>Yes, for the final step. After you reply CONFIRM, we text a launch link that opens your wallet so you can approve the actual transaction yourself. You'll also need a valid EVM address to receive creator fees.</p>
+        <h3>Who signs the launch transaction?</h3>
+        <p>You do, from your own wallet. LAUNCH/SMS builds the transaction and shows it to you, but never holds your keys or submits it on your behalf.</p>
         <h3>Can I change something before launch?</h3>
         <p>Yes. Reply <code>BACK</code> before the final confirmation.</p>
         <h3>Can I cancel?</h3>

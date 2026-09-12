@@ -1,6 +1,14 @@
 import { isAddress } from 'viem';
 import { clearSession, getSession, setSession } from './state.js';
-import { dryRunDraft, launchFromDraft } from './pons.js';
+import { dryRunDraft } from './pons.js';
+import { createLaunchClaim } from './claims.js';
+
+function siteUrl() {
+  const configured = String(process.env.PUBLIC_SITE_URL || '').trim();
+  if (configured) return configured.replace(/\/$/, '');
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return '';
+}
 
 const SESSION_TTL = 60 * 60;
 const SKIP = /^(skip|none|n\/a|-|no)$/i;
@@ -136,11 +144,13 @@ export async function processMessage({ from, body, forceDryRun = false }) {
     }
 
     try {
-      const result = await launchFromDraft(session.draft);
+      const claim = await createLaunchClaim({ phone: from, draft: session.draft });
       await clearSession(from);
-      return { reply: `LIVE ✓\n${session.draft.name} · $${session.draft.symbol}\nToken: ${result.token}\n${result.explorer}\nTx: ${result.transaction}` };
+      const base = siteUrl();
+      const url = base ? `${base}/claim/${claim.token}` : `/claim/${claim.token}`;
+      return { reply: `Your token is ready. Tap to launch:\n${url}\nExpires in 30 minutes. Your wallet will open so you can approve the transaction yourself. We'll text you the result.` };
     } catch (error) {
-      return { reply: `Launch stopped safely: ${error.message}\nYour draft is still saved. Reply CONFIRM to retry, BACK to edit, or CANCEL.` };
+      return { reply: `Could not prepare your launch: ${error.message}\nYour draft is still saved. Reply CONFIRM to retry, BACK to edit, or CANCEL.` };
     }
   }
 

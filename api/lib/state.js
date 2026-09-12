@@ -1,27 +1,20 @@
 import crypto from 'node:crypto';
+import { hasSupabase, sb } from './supabase.js';
 
 const memory = new Map();
-const hasRedis = () => Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 const digest = (value) => crypto.createHash('sha256').update(String(value)).digest('hex').slice(0, 40);
 const sessionKey = (sender) => `launchsms:session:${digest(sender)}`;
 const webhookKey = (fingerprint) => `launchsms:webhook:${digest(fingerprint)}`;
 
-async function redis(command, ...args) {
-  const base = process.env.UPSTASH_REDIS_REST_URL?.replace(/\/$/, '');
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  const path = [command, ...args].map(v => encodeURIComponent(String(v))).join('/');
-  const response = await fetch(`${base}/${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store'
-  });
-  if (!response.ok) throw new Error(`Redis ${command} failed (${response.status})`);
-  return (await response.json()).result;
-}
-
 export async function setSession(sender, payload, ttlSeconds = 3600) {
   const key = sessionKey(sender);
-  if (hasRedis()) {
-    await redis('SET', key, JSON.stringify(payload), 'EX', ttlSeconds);
+  if (hasSupabase()) {
+    const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
+    await sb('sms_sessions', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({ session_key: key, payload, expires_at: expiresAt, updated_at: new Date().toISOString() })
+    });
     return;
   }
   memory.set(key, { payload, expires: Date.now() + ttlSeconds * 1000 });
@@ -29,9 +22,15 @@ export async function setSession(sender, payload, ttlSeconds = 3600) {
 
 export async function getSession(sender) {
   const key = sessionKey(sender);
-  if (hasRedis()) {
-    const value = await redis('GET', key);
-    return value ? JSON.parse(value) : null;
+  if (hasSupabase()) {
+    const rows = await sb(`sms_sessions?session_key=eq.${encodeURIComponent(key)}&select=payload,expires_at`);
+    const row = rows?.[0];
+    if (!row) return null;
+    if (new Date(row.expires_at).getTime() < Date.now()) {
+      await sb(`sms_sessions?session_key=eq.${encodeURIComponent(key)}`, { method: 'DELETE' }).catch(() => {});
+      return null;
+    }
+    return row.payload;
   }
   const entry = memory.get(key);
   if (!entry) return null;
@@ -44,8 +43,8 @@ export async function getSession(sender) {
 
 export async function clearSession(sender) {
   const key = sessionKey(sender);
-  if (hasRedis()) {
-    await redis('DEL', key);
+  if (hasSupabase()) {
+    await sb(`sms_sessions?session_key=eq.${encodeURIComponent(key)}`, { method: 'DELETE' });
     return;
   }
   memory.delete(key);
@@ -53,9 +52,17 @@ export async function clearSession(sender) {
 
 export async function claimWebhook(fingerprint, ttlSeconds = 86400) {
   const key = webhookKey(fingerprint);
-  if (hasRedis()) {
-    const result = await redis('SET', key, '1', 'NX', 'EX', ttlSeconds);
-    return result === 'OK';
+  if (hasSupabase()) {
+    try {
+      const rows = await sb('webhook_dedup', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=ignore-duplicates,return=representation' },
+        body: JSON.stringify({ fingerprint: key })
+      });
+      return Array.isArray(rows) && rows.length > 0;
+    } catch {
+      return false;
+    }
   }
   const existing = memory.get(key);
   if (existing && Date.now() < existing.expires) return false;
@@ -64,5 +71,5 @@ export async function claimWebhook(fingerprint, ttlSeconds = 86400) {
 }
 
 export function stateBackend() {
-  return hasRedis() ? 'upstash' : 'memory';
+  return hasSupabase() ? 'supabase' : 'memory';
 }
