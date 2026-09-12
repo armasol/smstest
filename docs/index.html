@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f1f2ec"><title>Docs — LAUNCH/SMS</title><link rel="icon" href="/assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/styles.css?v=1"></head><body class="docs-body">
+<header class="docs-nav"><div class="shell" style="display:flex;align-items:center;justify-content:space-between"><a class="brand" href="/"><span class="mark">↗</span><span>LAUNCH/SMS</span></a><a class="sms-link" href="#">Launch with SMS ↗</a></div></header>
+<div class="docs-shell"><aside class="docs-side"><a href="#quickstart">Quickstart</a><a href="#command">Command format</a><a href="#flow">Launch flow</a><a href="#deployment">Deployment</a><a href="#security">Security</a><a href="#contracts">Contracts</a></aside><main class="docs-main"><div class="label">DEVELOPER DOCUMENTATION</div><h1>Launch from the message thread.</h1><p class="lead">LAUNCH/SMS turns a text message into a reviewable token draft and, after explicit confirmation, an onchain launch on Robinhood Chain.</p>
+<section id="quickstart"><h2>Quickstart</h2><p>Text the public US number using this format:</p><div class="codebox"><code><span class="g">LAUNCH</span> @orbitlabs $ORBIT</code></div><p>The service reads the public X profile, builds a draft, sends the exact token name and ticker back to the same number, and waits for confirmation.</p><div class="codebox"><code>READY TO LAUNCH
+Orbit Labs · $ORBIT
+@orbitlabs
+
+Robinhood Chain · ETH pair
+<span class="g">Reply YES to deploy.</span></code></div></section>
+<section id="command"><h2>Command format</h2><h3>Start</h3><div class="codebox"><code>LAUNCH @handle $TICKER
+LAUNCH https://x.com/handle $TICKER</code></div><p>The ticker is optional. If omitted, a clean uppercase ticker is derived from the X handle. Tickers are limited to 10 alphanumeric characters.</p><h3>Confirm / cancel</h3><div class="codebox"><code><span class="g">YES</span>
+CONFIRM
+LAUNCH IT
+
+CANCEL
+NO</code></div><p>Pending drafts expire after 15 minutes.</p></section>
+<section id="flow"><h2>Launch flow</h2><ol><li>Twilio receives the inbound SMS and sends it to <code>/api/sms</code>.</li><li>The command parser extracts the X handle and requested ticker.</li><li>The X API supplies public profile metadata.</li><li>The pending draft is stored with a 15-minute TTL.</li><li>A reply of <code>YES</code> checks sender authorization and live Pons launch conditions.</li><li>The launcher pins current economics, pays the current launch fee, and calls <code>launchToken</code>.</li><li>The <code>TokenLaunched</code> factory event is parsed and the token address is returned by SMS.</li></ol><div class="callout"><strong>No fake success state.</strong> If the contract gate, configuration, RPC, sponsor wallet, or transaction fails, the user receives an error and the pending draft remains available for retry.</div></section>
+<section id="deployment"><h2>Deployment</h2><p>This repository is Vercel-ready. Import it as a Vercel project, add the environment variables from <code>.env.example</code>, then configure your Twilio number’s incoming message webhook to:</p><div class="codebox"><code>POST https://YOUR-DOMAIN.com/api/sms</code></div><p>Set the public site number in <code>index.html</code> and <code>assets/app.js</code> after buying the Twilio number. The included <code>+1 (555) 013-7117</code> is a safe US placeholder, not a live carrier number.</p><h3>Required environment variables</h3><div class="codebox"><code>TWILIO_AUTH_TOKEN=
+X_BEARER_TOKEN=
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+LAUNCHER_PRIVATE_KEY=0x...
+ALLOWED_PHONE_NUMBERS=+1...</code></div></section>
+<section id="security"><h2>Security</h2><p>The deployment wallet pays the onchain launch fee, so the default configuration is intentionally allowlisted. Do not enable public sponsored launches until you have abuse controls, billing, rate limits and a clear custody model.</p><p>Twilio webhook signature validation is enabled by default. Pending state is keyed by the sender number and confirmation must come from the same sender.</p><div class="callout"><strong>Production recommendation:</strong> use a dedicated low-balance launcher wallet, an Upstash Redis database for state, and an allowlist while testing. Never reuse a treasury wallet or expose its key client-side.</div></section>
+<section id="contracts"><h2>Robinhood Chain + Pons v2</h2><p>The integration targets Robinhood Chain (chain ID <code>4663</code>) and the active Pons v2 launch factory configured in <code>.env.example</code>. The service reads <code>canLaunch</code>, the selected config, current economics, and launch fee immediately before deployment.</p><p>Pons v2 currently documents a launch gate, so the configured launcher wallet must be approved while public launches are closed.</p><div class="codebox"><code>RPC      https://rpc.mainnet.chain.robinhood.com
+FACTORY  0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e
+CHAIN ID 4663</code></div></section>
+</main></div><script src="/assets/app.js?v=1" defer></script></body></html>

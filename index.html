@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050505" />
+  <meta name="description" content="Launch a token on Robinhood Chain from a text message." />
+  <title>LAUNCH/SMS — Launch on Robinhood Chain with a text</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/assets/styles.css?v=1" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="nav shell">
+    <a class="brand" href="/" aria-label="Launch SMS home"><span class="mark">↗</span><span>LAUNCH/SMS</span></a>
+    <nav class="navlinks" aria-label="Primary navigation">
+      <a href="#how">How it works</a>
+      <a href="/docs">Docs</a>
+      <a class="nav-cta sms-link" href="#">Launch with SMS <span>↗</span></a>
+    </nav>
+    <a class="mobile-cta sms-link" href="#">Text us ↗</a>
+  </header>
+
+  <main>
+    <section class="hero shell">
+      <div class="hero-aura" aria-hidden="true"></div>
+      <div class="eyebrow reveal"><span class="pulse"></span> Built for Robinhood Chain</div>
+      <h1 class="hero-title reveal"><span>Launch on Robinhood.</span><br><em>With a text.</em></h1>
+      <p class="hero-copy reveal">Send an X handle. We pull the public profile, build the token, show you exactly what will launch, and wait for one word: <strong>YES.</strong></p>
+      <div class="hero-actions reveal">
+        <a class="button primary sms-link" href="#"><span>Launch with SMS</span><b>↗</b></a>
+        <a class="button ghost" href="/docs">Read the docs <b>↗</b></a>
+      </div>
+      <div class="number-line reveal"><span>TEXT</span><button class="copy-number" data-number="+15550137117">+1 (555) 013-7117</button><span class="available">US NUMBER</span></div>
+
+      <div class="stage reveal" id="stage">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="float-chip chip-x"><span>𝕏</span><div><small>SOURCE</small><b>@orbitlabs</b></div></div>
+        <div class="float-chip chip-chain"><span class="rh-glyph">R</span><div><small>NETWORK</small><b>Robinhood Chain</b></div></div>
+        <div class="float-chip chip-live"><i></i><div><small>STATUS</small><b>Ready to launch</b></div></div>
+        <div class="phone-wrap">
+          <div class="phone-glow"></div>
+          <div class="phone">
+            <div class="island"></div>
+            <div class="phone-top"><span>9:41</span><span class="signal">● ● ▰</span></div>
+            <div class="messages-head"><span class="avatar">↗</span><div><b>LAUNCH/SMS</b><small>Text Message</small></div><span class="chev">›</span></div>
+            <div class="thread" id="thread">
+              <div class="msg out m1">launch @orbitlabs $ORBIT</div>
+              <div class="typing m2"><i></i><i></i><i></i></div>
+              <div class="msg in m3"><b>READY TO LAUNCH</b><br>Orbit Labs · $ORBIT<br><span>@orbitlabs</span><br><br>Robinhood Chain · ETH pair<br>Reply YES to deploy.</div>
+              <div class="msg out m4">YES</div>
+              <div class="msg in success m5"><span class="success-dot">✓</span><div><b>LIVE.</b><br>$ORBIT is onchain.<small>0x71a9...04f2 ↗</small></div></div>
+            </div>
+            <div class="composer"><span>＋</span><div>Text Message</div><b>↑</b></div>
+            <div class="homebar"></div>
+          </div>
+        </div>
+        <div class="stage-caption"><span>NO DASHBOARD.</span><span>NO DEPLOY SCRIPT.</span><span>ONE CONFIRMATION.</span></div>
+      </div>
+    </section>
+
+    <section class="ticker-band" aria-label="Product flow">
+      <div class="ticker-track"><span>TEXT THE HANDLE</span><i>↗</i><span>PREVIEW THE TOKEN</span><i>↗</i><span>REPLY YES</span><i>↗</i><span>LIVE ON ROBINHOOD CHAIN</span><i>↗</i><span>TEXT THE HANDLE</span><i>↗</i><span>PREVIEW THE TOKEN</span><i>↗</i></div>
+    </section>
+
+    <section class="steps-section" id="how">
+      <div class="shell">
+        <div class="section-kicker reveal">THE WHOLE FLOW</div>
+        <div class="step-head reveal"><span>Text.</span><span>Confirm.</span><span class="green">Live.</span></div>
+        <p class="section-intro reveal">A launch request should read like a message, not a deployment checklist.</p>
+        <div class="step-grid">
+          <article class="step-card reveal"><div class="step-no">01</div><div class="mini-ui sms-mini"><span class="bubble">launch @orbitlabs $ORBIT</span><span class="cursor"></span></div><h3>Send what to launch.</h3><p>An X handle is enough. Add a ticker if you want one; otherwise we derive a clean default.</p></article>
+          <article class="step-card reveal"><div class="step-no">02</div><div class="mini-ui scan-mini"><div class="scan-avatar">O</div><div class="scan-lines"><b>Orbit Labs</b><span>@orbitlabs</span><i></i><i></i></div><div class="scan-beam"></div></div><h3>We build the preview.</h3><p>Name, image, bio and social link come from the public X profile. Nothing deploys before you see it.</p></article>
+          <article class="step-card reveal"><div class="step-no">03</div><div class="mini-ui confirm-mini"><div class="confirm-ring"><span>YES</span></div><small>1 CONFIRMATION</small></div><h3>Reply YES. That’s it.</h3><p>The launcher checks live contract economics, submits onchain, and texts the token address back.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="light-section">
+      <div class="globe-bg" aria-hidden="true"><div class="globe"></div></div>
+      <div class="shell light-inner">
+        <div class="section-kicker dark reveal">FROM A PROFILE TO ONCHAIN</div>
+        <h2 class="light-title reveal">One message.<br><span>One launch.</span></h2>
+        <p class="light-copy reveal">The browser disappears from the critical path. Your phone becomes the launch surface.</p>
+        <div class="pipeline reveal">
+          <div class="pipe-node"><div class="node-icon">𝕏</div><small>INPUT</small><b>Public X profile</b><span>name · bio · image · link</span></div>
+          <div class="pipe-line"><i></i><span>SMS</span></div>
+          <div class="pipe-node center"><div class="node-icon black">↗</div><small>LAUNCH/SMS</small><b>Build + confirm</b><span>nothing signs before YES</span></div>
+          <div class="pipe-line"><i></i><span>ONCHAIN</span></div>
+          <div class="pipe-node"><div class="node-icon chain">R</div><small>OUTPUT</small><b>Robinhood Chain</b><span>token · curve · address</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bento-section">
+      <div class="shell">
+        <div class="section-kicker reveal">BUILT LIKE INFRASTRUCTURE</div>
+        <h2 class="bento-title reveal">Simple on the outside.<br><span>Serious underneath.</span></h2>
+        <div class="bento">
+          <article class="bento-card wide reveal"><div class="card-tag">01 / VERIFIED INPUT</div><h3>X in.<br>Token metadata out.</h3><p>Pull the public identity directly from the handle you text. The exact launch preview comes back before deployment.</p><div class="profile-stack"><div class="p-card p1"><div class="fake-avatar">O</div><div><b>Orbit Labs</b><span>@orbitlabs</span></div><em>𝕏</em></div><div class="p-card p2"><small>TOKEN PREVIEW</small><b>Orbit Labs</b><strong>$ORBIT</strong></div><svg class="connector" viewBox="0 0 400 100" preserveAspectRatio="none"><path d="M10,50 C120,5 280,95 390,50" /></svg></div></article>
+          <article class="bento-card reveal"><div class="card-tag">02 / EXPLICIT CONFIRMATION</div><h3>Nothing launches by accident.</h3><p>Every draft expires. Every deploy requires an explicit YES from the same phone number.</p><div class="yes-visual"><span>YES</span><i></i></div></article>
+          <article class="bento-card reveal"><div class="card-tag">03 / ONCHAIN</div><h3>The receipt comes back to you.</h3><p>Transaction, token and curve are resolved from the factory event and returned by SMS.</p><div class="receipt"><div><span>STATUS</span><b><i></i> LIVE</b></div><div><span>TOKEN</span><code>0x71a9...04f2</code></div><div><span>NETWORK</span><b>Robinhood Chain</b></div></div></article>
+          <article class="bento-card wide console-card reveal"><div class="card-tag">04 / NO FAKE SUCCESS STATES</div><h3>Contract says no?<br><span>Your SMS says no.</span></h3><p>The launcher checks whether the wallet can launch, whether the config is enabled, and pins current economics before submitting.</p><div class="console"><div class="console-top"><i></i><i></i><i></i><span>launch/sms — execution</span></div><code><span>→</span> canLaunch(launcher) <b>TRUE</b><br><span>→</span> config[0].enabled <b>TRUE</b><br><span>→</span> previewLaunchEconomics <b>PINNED</b><br><span>→</span> launchToken(...) <em>SUBMITTING_</em></code></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta shell">
+      <div class="final-glow"></div>
+      <div class="section-kicker reveal">YOUR NEXT TOKEN STARTS HERE</div>
+      <h2 class="reveal">Launch with<br><span>a text.</span></h2>
+      <a class="big-number sms-link reveal" href="#">+1 (555) 013-7117 <b>↗</b></a>
+      <p class="reveal">Text <strong>LAUNCH @handle $TICKER</strong></p>
+      <div class="final-actions reveal"><a class="button primary sms-link" href="#">Open Messages <b>↗</b></a><a class="button ghost" href="/docs">Developer docs <b>↗</b></a></div>
+    </section>
+  </main>
+
+  <footer class="footer shell">
+    <a class="brand" href="/"><span class="mark">↗</span><span>LAUNCH/SMS</span></a>
+    <div class="footer-mid">Launch infrastructure for Robinhood Chain.<br><small>Independent project. Not affiliated with Robinhood Markets, Inc.</small></div>
+    <div class="footer-links"><a href="/docs">Docs</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a class="sms-link" href="#">Text us ↗</a></div>
+    <div class="footer-bottom"><span>© 2026 LAUNCH/SMS</span><span>ROBINHOOD CHAIN · 4663</span></div>
+  </footer>
+  <div class="toast" id="toast">Number copied</div>
+  <script src="/assets/app.js?v=1" defer></script>
+</body>
+</html>

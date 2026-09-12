@@ -1,0 +1,13 @@
+{
+  "name": "launch-sms",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "check": "node --check api/sms.js && node --check api/lib/pons.js && node --check api/lib/x.js && node --check api/lib/state.js && node --check api/lib/twilio.js"
+  },
+  "dependencies": {
+    "viem": "^2.37.9"
+  }
+}
