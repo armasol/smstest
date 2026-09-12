@@ -82,7 +82,7 @@ function validateStep(step, input) {
 
 function review(draft, dryRun) {
   const links = [draft.website, draft.twitter, draft.telegram, draft.discord, draft.farcaster].filter(Boolean).length;
-  return `REVIEW\n${draft.name} · $${draft.symbol}\n${draft.description}\nCreator: ${draft.creatorFeeRecipient.slice(0, 8)}…${draft.creatorFeeRecipient.slice(-6)}\nTax: ${(draft.creatorTaxBps / 100).toFixed(2)}% · Buyback: ${draft.buybackEnabled ? 'ON' : 'OFF'} · Links: ${links}\nPair: native ETH · Robinhood Chain\n\nReply CONFIRM to ${dryRun ? 'run a safe test' : 'launch onchain'}. Reply BACK to edit or CANCEL.`;
+  return `REVIEW\n${draft.name} · $${draft.symbol}\n${draft.description}\nCreator: ${draft.creatorFeeRecipient.slice(0, 8)}…${draft.creatorFeeRecipient.slice(-6)}\nTax: ${(draft.creatorTaxBps / 100).toFixed(2)}% · Buyback: ${draft.buybackEnabled ? 'ON' : 'OFF'} · Links: ${links}\nNetwork: Robinhood Chain\n\nReply CONFIRM to ${dryRun ? 'run a safe test' : 'launch'}. Reply BACK to edit or CANCEL.`;
 }
 
 export async function processMessage({ from, body, forceDryRun = false }) {
@@ -102,11 +102,11 @@ export async function processMessage({ from, body, forceDryRun = false }) {
 
   if (!session) {
     if (!['LAUNCH', 'START', 'CREATE'].includes(upper)) {
-      return { reply: `Text LAUNCH to start a guided Pons token launch.${dryRun ? '\nTEST MODE is on — no transaction will be sent.' : ''}` };
+      return { reply: `Text LAUNCH to start your token launch.${dryRun ? '\nTEST MODE — no transaction will be sent.' : ''}` };
     }
     session = { stage: 'collect', step: 0, draft: {}, startedAt: Date.now() };
     await setSession(from, session, SESSION_TTL);
-    return { reply: `LAUNCH/SMS\nRobinhood Chain · Pons v2${dryRun ? '\nTEST MODE — no transaction will be sent.' : ''}\n\n${STEPS[0].prompt}` };
+    return { reply: `LAUNCH/SMS\nLaunch a token from this thread.${dryRun ? '\nTEST MODE — no transaction will be sent.' : ''}\n\n${STEPS[0].prompt}` };
   }
 
   if (upper === 'BACK') {

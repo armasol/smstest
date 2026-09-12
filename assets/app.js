@@ -7,14 +7,14 @@ const smooth = (a, b, x) => {
 const windowed = (x, a, b, c, d) => smooth(a, b, x) * (1 - smooth(c, d, x));
 
 let publicPhone = '';
-let publicDisplay = 'CONNECT NUMBER';
+let publicDisplay = 'TEXT TO LAUNCH';
 
 async function hydrateConfig() {
   try {
     const r = await fetch('/api/config', { cache: 'no-store' });
     const c = await r.json();
     publicPhone = String(c.phone || '').replace(/[^+\d]/g, '');
-    publicDisplay = c.display || c.phone || 'CONNECT NUMBER';
+    publicDisplay = c.display || c.phone || 'TEXT TO LAUNCH';
   } catch {}
 
   document.querySelectorAll('.public-phone').forEach(el => {
@@ -23,7 +23,7 @@ async function hydrateConfig() {
   });
   document.querySelectorAll('.sms-link').forEach(a => {
     if (!publicPhone) {
-      a.href = '/docs#connect';
+      a.href = '/docs#start';
       return;
     }
     const body = encodeURIComponent('LAUNCH');
@@ -35,7 +35,7 @@ hydrateConfig();
 const toast = document.getElementById('toast');
 document.querySelectorAll('.copy-number').forEach(button => {
   button.addEventListener('click', async () => {
-    if (!publicPhone) { location.href = '/docs#connect'; return; }
+    if (!publicPhone) { location.href = '/docs#start'; return; }
     try { await navigator.clipboard.writeText(publicPhone); } catch {}
     toast?.classList.add('show');
     setTimeout(() => toast?.classList.remove('show'), 1300);
@@ -78,7 +78,7 @@ function paintHero() {
   const settle = smooth(.035, .235, p);
   const initialScale = mobile ? .56 : (tablet ? .58 : .60);
   const focusScale = mobile ? .79 : (tablet ? .81 : .84);
-  const liftVh = mobile ? -45 : (tablet ? -45 : -44);
+  const liftVh = mobile ? -52 : (tablet ? -50 : -49);
   const scale = p < .72 ? mix(initialScale, focusScale, settle) : mix(focusScale, focusScale * .95, smooth(.72,.86,p));
   const y = mix(0, liftVh, settle) + mix(0, -1.5, smooth(.42,.72,p));
   const rotX = mix(0, -1.2, smooth(.26,.48,p)) + mix(0, 1.2, smooth(.55,.76,p));
