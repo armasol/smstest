@@ -1,28 +1,139 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f1f2ec"><title>Docs — LAUNCH/SMS</title><link rel="icon" href="/assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/styles.css?v=1"></head><body class="docs-body">
-<header class="docs-nav"><div class="shell" style="display:flex;align-items:center;justify-content:space-between"><a class="brand" href="/"><span class="mark">↗</span><span>LAUNCH/SMS</span></a><a class="sms-link" href="#">Launch with SMS ↗</a></div></header>
-<div class="docs-shell"><aside class="docs-side"><a href="#quickstart">Quickstart</a><a href="#command">Command format</a><a href="#flow">Launch flow</a><a href="#deployment">Deployment</a><a href="#security">Security</a><a href="#contracts">Contracts</a></aside><main class="docs-main"><div class="label">DEVELOPER DOCUMENTATION</div><h1>Launch from the message thread.</h1><p class="lead">LAUNCH/SMS turns a text message into a reviewable token draft and, after explicit confirmation, an onchain launch on Robinhood Chain.</p>
-<section id="quickstart"><h2>Quickstart</h2><p>Text the public US number using this format:</p><div class="codebox"><code><span class="g">LAUNCH</span> @orbitlabs $ORBIT</code></div><p>The service reads the public X profile, builds a draft, sends the exact token name and ticker back to the same number, and waits for confirmation.</p><div class="codebox"><code>READY TO LAUNCH
-Orbit Labs · $ORBIT
-@orbitlabs
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#f0f2ec" />
+  <title>Docs — LAUNCH/SMS</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/assets/styles.css?v=2" />
+</head>
+<body class="docs-body">
+  <header class="docs-nav"><div class="shell nav-inner"><a class="brand" href="/"><span class="brand-mark">↗</span><span>LAUNCH/SMS</span></a><a href="/test">Safe tester ↗</a></div></header>
+  <div class="docs-layout">
+    <aside class="docs-side">
+      <a href="#quickstart">Quickstart</a><a href="#conversation">Conversation</a><a href="#architecture">Architecture</a><a href="#connect">Connect HushSMS</a><a href="#international">Non-US testing</a><a href="#pons">Pons + Robinhood</a><a href="#mainnet">Go mainnet</a><a href="#security">Security</a>
+    </aside>
+    <main class="docs-main">
+      <div class="section-label">DEPLOYMENT DOCUMENTATION</div>
+      <h1>From a text to a Pons launch.</h1>
+      <p class="lead">No X API. The sender supplies the token metadata directly by SMS. The backend resolves Pons contract parameters at confirmation time and talks to Robinhood Chain through the public RPC.</p>
 
-Robinhood Chain · ETH pair
-<span class="g">Reply YES to deploy.</span></code></div></section>
-<section id="command"><h2>Command format</h2><h3>Start</h3><div class="codebox"><code>LAUNCH @handle $TICKER
-LAUNCH https://x.com/handle $TICKER</code></div><p>The ticker is optional. If omitted, a clean uppercase ticker is derived from the X handle. Tickers are limited to 10 alphanumeric characters.</p><h3>Confirm / cancel</h3><div class="codebox"><code><span class="g">YES</span>
-CONFIRM
-LAUNCH IT
+      <section id="quickstart">
+        <h2>Quickstart</h2>
+        <p>The project ships in <strong>dry-run mode</strong>. Deploy it first, connect Redis, then use the built-in browser tester before connecting a phone line.</p>
+        <div class="codebox"><code>EXECUTION_MODE=dry-run
+ENABLE_ONCHAIN_LAUNCH=false
+ENABLE_WEB_TESTER=true</code></div>
+        <p>Open <code>/test</code>, text <code>LAUNCH</code>, and complete the whole conversation. The web tester can never broadcast because the endpoint forces dry-run mode server-side.</p>
+      </section>
 
-CANCEL
-NO</code></div><p>Pending drafts expire after 15 minutes.</p></section>
-<section id="flow"><h2>Launch flow</h2><ol><li>Twilio receives the inbound SMS and sends it to <code>/api/sms</code>.</li><li>The command parser extracts the X handle and requested ticker.</li><li>The X API supplies public profile metadata.</li><li>The pending draft is stored with a 15-minute TTL.</li><li>A reply of <code>YES</code> checks sender authorization and live Pons launch conditions.</li><li>The launcher pins current economics, pays the current launch fee, and calls <code>launchToken</code>.</li><li>The <code>TokenLaunched</code> factory event is parsed and the token address is returned by SMS.</li></ol><div class="callout"><strong>No fake success state.</strong> If the contract gate, configuration, RPC, sponsor wallet, or transaction fails, the user receives an error and the pending draft remains available for retry.</div></section>
-<section id="deployment"><h2>Deployment</h2><p>This repository is Vercel-ready. Import it as a Vercel project, add the environment variables from <code>.env.example</code>, then configure your Twilio number’s incoming message webhook to:</p><div class="codebox"><code>POST https://YOUR-DOMAIN.com/api/sms</code></div><p>Set the public site number in <code>index.html</code> and <code>assets/app.js</code> after buying the Twilio number. The included <code>+1 (555) 013-7117</code> is a safe US placeholder, not a live carrier number.</p><h3>Required environment variables</h3><div class="codebox"><code>TWILIO_AUTH_TOKEN=
-X_BEARER_TOKEN=
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
-LAUNCHER_PRIVATE_KEY=0x...
-ALLOWED_PHONE_NUMBERS=+1...</code></div></section>
-<section id="security"><h2>Security</h2><p>The deployment wallet pays the onchain launch fee, so the default configuration is intentionally allowlisted. Do not enable public sponsored launches until you have abuse controls, billing, rate limits and a clear custody model.</p><p>Twilio webhook signature validation is enabled by default. Pending state is keyed by the sender number and confirmation must come from the same sender.</p><div class="callout"><strong>Production recommendation:</strong> use a dedicated low-balance launcher wallet, an Upstash Redis database for state, and an allowlist while testing. Never reuse a treasury wallet or expose its key client-side.</div></section>
-<section id="contracts"><h2>Robinhood Chain + Pons v2</h2><p>The integration targets Robinhood Chain (chain ID <code>4663</code>) and the active Pons v2 launch factory configured in <code>.env.example</code>. The service reads <code>canLaunch</code>, the selected config, current economics, and launch fee immediately before deployment.</p><p>Pons v2 currently documents a launch gate, so the configured launcher wallet must be approved while public launches are closed.</p><div class="codebox"><code>RPC      https://rpc.mainnet.chain.robinhood.com
-FACTORY  0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e
-CHAIN ID 4663</code></div></section>
-</main></div><script src="/assets/app.js?v=1" defer></script></body></html>
+      <section id="conversation">
+        <h2>The SMS conversation</h2>
+        <p>The backend asks for the creator-controlled inputs Pons v2 accepts:</p>
+        <div class="codebox"><code><span class="g">LAUNCH</span>
+1/11 Token name?
+2/11 Ticker?
+3/11 Description?
+4/11 Logo URL / ipfs:// URI?
+5/11 Website?          (SKIP allowed)
+6/11 X / Twitter URL? (SKIP allowed)
+7/11 Telegram URL?    (SKIP allowed)
+8/11 Discord URL?     (SKIP allowed)
+9/11 Farcaster URL?   (SKIP allowed)
+10/11 Creator fee wallet?
+11/11 Creator tax + buyback?  Example: 1%, YES
+
+<span class="g">CONFIRM</span></code></div>
+        <p>The backend handles the technical launch fields automatically: native ETH pair, enabled launch config, economics pin, launch fee, a fresh 32-byte CREATE2 salt and the current protocol creator-tax cap.</p>
+      </section>
+
+      <section id="architecture">
+        <h2>Architecture</h2>
+        <div class="codebox"><code>Phone
+  ↓ SMS
+HushSMS carrier line
+  ↓ signed webhook
+POST /api/sms
+  ↓
+Upstash Redis conversation state
+  ↓ CONFIRM
+Robinhood public RPC
+  ↓
+Pons v2 factory
+  ↓
+TokenLaunched event
+  ↓
+HushSMS REST reply → Phone</code></div>
+        <p>No X service and no third-party RPC key are required.</p>
+      </section>
+
+      <section id="connect">
+        <h2>Connect HushSMS</h2>
+        <ol>
+          <li>Buy a HushSMS mobile line using crypto.</li>
+          <li>In the HushSMS panel, enable the inbound webhook and point it to <code>https://YOUR-DOMAIN.com/api/sms</code>.</li>
+          <li>Copy the line ID, line bearer token and webhook signing secret into Vercel environment variables.</li>
+          <li>Set <code>PUBLIC_PHONE_NUMBER</code> and <code>PUBLIC_PHONE_DISPLAY</code>. The site reads these at runtime from <code>/api/config</code>, so no code edit is required.</li>
+        </ol>
+        <div class="codebox"><code>PUBLIC_PHONE_NUMBER=+381...
+PUBLIC_PHONE_DISPLAY=+381 ...
+HUSHSMS_LINE_ID=ln_...
+HUSHSMS_LINE_TOKEN=hs_live_...
+HUSHSMS_WEBHOOK_SECRET=...
+HUSHSMS_VALIDATE_SIGNATURE=true</code></div>
+        <div class="callout"><strong>Provider API note.</strong> The integration sends replies to HushSMS at <code>POST /v1/lines/{lineId}/messages</code> with the line bearer token. Keep the line token server-side only.</div>
+      </section>
+
+      <section id="international">
+        <h2>Test with a non-US number</h2>
+        <p>You do not need a US SIM to test. HushSMS lists carrier numbers across Europe, including Serbia (+381). A practical test from Kosovo is:</p>
+        <div class="codebox"><code>Your phone:       +383 ...
+HushSMS test line: +381 ...
+Webhook:           https://YOUR-DOMAIN.com/api/sms
+Mode:              dry-run</code></div>
+        <p>Send <code>LAUNCH</code> from your +383 number to the +381 line. You are testing the actual international carrier → HushSMS → webhook → HushSMS reply loop while the onchain executor remains disabled. Your mobile carrier may charge for an international SMS.</p>
+        <p>You can later replace the public number with a US HushSMS line by changing only the Vercel environment values.</p>
+      </section>
+
+      <section id="pons">
+        <h2>Pons v2 + Robinhood Chain</h2>
+        <div class="codebox"><code>Chain ID  4663
+RPC       https://rpc.mainnet.chain.robinhood.com
+Factory   0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e
+Pair      0x0000000000000000000000000000000000000000  (native ETH)</code></div>
+        <p>At confirmation, the executor reads the current enabled launch config, <code>launchFee()</code>, <code>maxCreatorTaxBps()</code>, <code>previewLaunchEconomics()</code> and <code>canLaunch(launcher)</code>. It then simulates the exact <code>launchToken</code> call before signing.</p>
+        <div class="callout"><strong>Current Pons limitation:</strong> v2 public launches are currently closed according to Pons documentation. That restriction is enforced onchain. This project cannot and does not bypass it; the configured launcher wallet must pass <code>canLaunch()</code> before a real launch succeeds.</div>
+      </section>
+
+      <section id="mainnet">
+        <h2>Turn on real launches</h2>
+        <p>Do this only after the SMS flow works in dry-run and the dedicated launcher wallet passes the Pons gate.</p>
+        <ol>
+          <li>Create a new dedicated EVM wallet just for this service.</li>
+          <li>Fund it with a small amount of ETH on Robinhood Chain for launch fees + gas.</li>
+          <li>Add the private key as a Vercel secret.</li>
+          <li>Verify <code>/api/status</code> reports the expected factory, config and launcher gate.</li>
+          <li>Flip both execution switches:</li>
+        </ol>
+        <div class="codebox"><code>LAUNCHER_PRIVATE_KEY=0x...
+EXECUTION_MODE=<span class="g">mainnet</span>
+ENABLE_ONCHAIN_LAUNCH=<span class="g">true</span></code></div>
+        <p>The two-switch model prevents a mistaken environment change from broadcasting by itself.</p>
+      </section>
+
+      <section id="security">
+        <h2>Security checklist</h2>
+        <ul>
+          <li>Use Upstash Redis in production; in-memory state is only a local fallback.</li>
+          <li>Keep HushSMS webhook signature verification enabled.</li>
+          <li>Use a dedicated low-balance launcher wallet, never a treasury wallet.</li>
+          <li>Keep dry-run enabled until the carrier loop is proven end to end.</li>
+          <li>The webhook deduplicates inbound events so a provider retry does not advance a conversation twice.</li>
+          <li>The exact Pons call is simulated before broadcast and economics are pinned immediately before execution.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -3,7 +3,9 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/sms.js": { "maxDuration": 60 }
+    "api/sms.js": { "maxDuration": 60 },
+    "api/test-message.js": { "maxDuration": 30 },
+    "api/status.js": { "maxDuration": 30 }
   },
   "headers": [
     {

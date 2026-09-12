@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#050505" />
+  <title>Safe Tester — LAUNCH/SMS</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/assets/styles.css?v=2" />
+</head>
+<body class="test-body">
+  <main class="test-page">
+    <div class="tester">
+      <section class="tester-copy">
+        <a href="/">← LAUNCH/SMS</a>
+        <div class="section-label" style="margin-top:42px">SAFE CONVERSATION TESTER</div>
+        <h1>Test the launch.<br><span>Send nothing.</span></h1>
+        <p>This uses the same launch-question state machine as the real HushSMS webhook, but this page is permanently forced into dry-run mode. It cannot broadcast a transaction.</p>
+        <p>Start with <strong style="color:#f4f5ef">LAUNCH</strong>. Follow the prompts exactly as you would by SMS.</p>
+      </section>
+      <section class="tester-phone" aria-label="SMS simulator">
+        <div class="tester-head">LAUNCH/SMS<small>DRY-RUN · NO TRANSACTION</small></div>
+        <div class="tester-messages" id="testerMessages">
+          <div class="tester-msg bot">Text LAUNCH to start a guided Pons token launch.</div>
+        </div>
+        <form class="tester-compose" id="testerForm">
+          <input id="testerInput" maxlength="1200" autocomplete="off" placeholder="Text Message" aria-label="Message" />
+          <button type="submit" aria-label="Send">↑</button>
+        </form>
+        <div class="tester-actions"><button type="button" data-quick="LAUNCH">LAUNCH</button><button type="button" data-quick="SKIP">SKIP</button><button type="button" data-quick="BACK">BACK</button><button type="button" data-quick="CANCEL">CANCEL</button></div>
+      </section>
+    </div>
+  </main>
+  <script src="/test/test.js?v=2" defer></script>
+</body>
+</html>

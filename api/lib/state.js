@@ -1,7 +1,10 @@
-const memory = new Map();
+import crypto from 'node:crypto';
 
+const memory = new Map();
 const hasRedis = () => Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
-const keyFor = (phone) => `launchsms:pending:${phone.replace(/[^+\d]/g, '')}`;
+const digest = (value) => crypto.createHash('sha256').update(String(value)).digest('hex').slice(0, 40);
+const sessionKey = (sender) => `launchsms:session:${digest(sender)}`;
+const webhookKey = (fingerprint) => `launchsms:webhook:${digest(fingerprint)}`;
 
 async function redis(command, ...args) {
   const base = process.env.UPSTASH_REDIS_REST_URL?.replace(/\/$/, '');
@@ -15,8 +18,8 @@ async function redis(command, ...args) {
   return (await response.json()).result;
 }
 
-export async function setPending(phone, payload, ttlSeconds = 900) {
-  const key = keyFor(phone);
+export async function setSession(sender, payload, ttlSeconds = 3600) {
+  const key = sessionKey(sender);
   if (hasRedis()) {
     await redis('SET', key, JSON.stringify(payload), 'EX', ttlSeconds);
     return;
@@ -24,8 +27,8 @@ export async function setPending(phone, payload, ttlSeconds = 900) {
   memory.set(key, { payload, expires: Date.now() + ttlSeconds * 1000 });
 }
 
-export async function getPending(phone) {
-  const key = keyFor(phone);
+export async function getSession(sender) {
+  const key = sessionKey(sender);
   if (hasRedis()) {
     const value = await redis('GET', key);
     return value ? JSON.parse(value) : null;
@@ -39,11 +42,27 @@ export async function getPending(phone) {
   return entry.payload;
 }
 
-export async function clearPending(phone) {
-  const key = keyFor(phone);
+export async function clearSession(sender) {
+  const key = sessionKey(sender);
   if (hasRedis()) {
     await redis('DEL', key);
     return;
   }
   memory.delete(key);
+}
+
+export async function claimWebhook(fingerprint, ttlSeconds = 86400) {
+  const key = webhookKey(fingerprint);
+  if (hasRedis()) {
+    const result = await redis('SET', key, '1', 'NX', 'EX', ttlSeconds);
+    return result === 'OK';
+  }
+  const existing = memory.get(key);
+  if (existing && Date.now() < existing.expires) return false;
+  memory.set(key, { payload: true, expires: Date.now() + ttlSeconds * 1000 });
+  return true;
+}
+
+export function stateBackend() {
+  return hasRedis() ? 'upstash' : 'memory';
 }

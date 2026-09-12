@@ -1,55 +1,48 @@
 # LAUNCH/SMS
 
-A production-oriented SMS launch surface for Robinhood Chain. The site is static and deploys on Vercel; the `/api/sms` serverless function handles Twilio inbound SMS, X metadata lookup, short-lived confirmation state, and Pons v2 contract deployment.
+A deployable SMS-first token launcher for **Pons v2 on Robinhood Chain**.
 
-## What is included
+The user texts `LAUNCH`, answers 11 guided questions, reviews the token, and replies `CONFIRM`. The server then resolves the current Pons launch configuration and economics, simulates the exact transaction, signs with a dedicated backend launcher wallet, and returns the token/explorer link by SMS.
 
-- Premium responsive landing page, inspired by the cinematic structure of the supplied reference but implemented from scratch.
-- All CTAs open the device SMS composer with a prefilled launch command.
-- Twilio-compatible inbound SMS webhook with optional signature verification.
-- X API v2 profile lookup and metadata generation.
-- 15-minute pending launch state using Upstash Redis REST, with an in-memory fallback for local testing.
-- Explicit `YES` confirmation before onchain execution.
-- Pons v2 / Robinhood Chain execution using `viem`.
-- Sender allowlist and public-launch kill switch.
-- Docs, privacy and terms routes.
+## What changed in v2 of this project
 
-## Important before public deployment
+- Removed Twilio.
+- Removed X API and X-profile scraping.
+- Added HushSMS inbound webhook + outbound reply adapter.
+- Uses Robinhood's public RPC directly: `https://rpc.mainnet.chain.robinhood.com`.
+- Collects Pons metadata directly over SMS.
+- Automatically resolves Pons technical fields at launch time.
+- Added webhook deduplication.
+- Added two-switch mainnet kill switch.
+- Added `/test`, a browser SMS simulator that is permanently dry-run.
+- Added `/api/status` for Pons/RPC/gate diagnostics.
+- The public phone number is runtime-configured through environment variables.
 
-The displayed `+1 (555) 013-7117` is a fictional US placeholder. Buy a real SMS-capable number from Twilio, update `assets/app.js` + visible copy, and point its incoming-message webhook to `https://YOUR-DOMAIN/api/sms` using POST.
+## Deploy
 
-Pons v2 currently documents that public launches are closed and launchers must pass `canLaunch(address)`. The code checks this on every deployment and fails safely if the configured hot wallet is not approved.
+1. Upload/import this repository to Vercel.
+2. Add every required variable from `.env.example`.
+3. Create an Upstash Redis database and add the REST URL/token.
+4. Leave `EXECUTION_MODE=dry-run` and `ENABLE_ONCHAIN_LAUNCH=false`.
+5. Open `/test` and complete the flow.
+6. Buy a HushSMS mobile line with crypto.
+7. Configure HushSMS inbound webhook to `https://YOUR-DOMAIN.com/api/sms`.
+8. Add the HushSMS line ID, bearer token, webhook signing secret, and public number env values.
+9. Text `LAUNCH` to the line and finish a real carrier dry-run.
+10. Only after that, add a dedicated launcher wallet and turn on mainnet execution.
 
-## Deploy to Vercel
+## Non-US phone testing
 
-1. Push this folder to GitHub.
-2. Import the repo in Vercel.
-3. Add all required values from `.env.example`.
-4. Deploy.
-5. In Twilio, set the SMS webhook on your purchased phone number to `POST https://YOUR-DOMAIN/api/sms`.
-6. Fund the dedicated launcher wallet with enough ETH to pay launch fees and gas.
-7. Keep `ALLOW_PUBLIC_LAUNCHES=false` during testing and add your own E.164 phone number to `ALLOWED_PHONE_NUMBERS`.
+HushSMS advertises numbers in many European countries. For a Kosovo-based test, a nearby supported mobile line such as Serbia (+381) gives you a real international SMS path from a +383 phone without requiring a US SIM. The app does not assume a US phone number anywhere in the backend.
 
-No build command is required for the static pages. Vercel will install the `viem` dependency for the serverless function.
+## Pons gate
 
-## SMS command
+Pons v2 currently documents public launches as closed and enforces the restriction inside the factory contract through `canLaunch(address)`. Removing a frontend/backend check cannot bypass the contract. Real mainnet execution therefore requires a launcher wallet that Pons currently allows. Dry-run SMS testing works without that access.
 
-```text
-LAUNCH @orbitlabs $ORBIT
-```
+## Important
 
-Then:
-
-```text
-YES
-```
-
-To stop:
-
-```text
-CANCEL
-```
-
-## Production hardening
-
-Before making the number public, add per-phone/IP rate limiting, billing or deposits for sponsored launch fees, abuse review, alerting, wallet balance monitoring, and counsel-reviewed legal policies. Use a dedicated launcher key with the minimum practical balance; never use a treasury key.
+- Do not put `LAUNCHER_PRIVATE_KEY` in frontend code.
+- Use a fresh, low-balance operational wallet.
+- HushSMS request/response specifics should be verified against the line's current API panel/docs when the account is provisioned.
+- Robinhood's public RPC is rate-limited; it is fine for early testing but a production service may eventually need a dedicated RPC provider.
+- This project is independent and not affiliated with Robinhood Markets, Inc. or Pons.
