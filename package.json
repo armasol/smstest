@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev",
-    "check": "node --check api/sms.js && node --check api/test-message.js && node --check api/status.js && node --check api/config.js && node --check api/lib/pons.js && node --check api/lib/flow.js && node --check api/lib/state.js && node --check api/lib/hushsms.js && node --check assets/app.js && node --check test/test.js"
+    "check": "node --check api/sms.js && node --check api/test-message.js && node --check api/status.js && node --check api/config.js && node --check api/claim/[token].js && node --check api/lib/pons.js && node --check api/lib/flow.js && node --check api/lib/state.js && node --check api/lib/claims.js && node --check api/lib/supabase.js && node --check api/lib/hushsms.js && node --check assets/app.js && node --check claim/app.js && node --check test/test.js"
   },
   "dependencies": {
     "viem": "^2.37.9"

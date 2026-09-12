@@ -1,8 +1,7 @@
-import crypto from 'node:crypto';
 import {
   createPublicClient,
-  createWalletClient,
   defineChain,
+  encodeFunctionData,
   formatEther,
   http,
   isAddress,
@@ -77,9 +76,10 @@ async function resolveLaunchConfig(client) {
   throw new Error('Pons has no enabled launch configuration');
 }
 
-function normalizeDraft(draft, expectedEconomics) {
+function normalizeDraft(draft, expectedEconomics, salt) {
   if (!draft?.name || !draft?.symbol || !draft?.logo || !draft?.creatorFeeRecipient) throw new Error('Launch draft is incomplete');
   if (!isAddress(draft.creatorFeeRecipient)) throw new Error('Creator fee wallet is invalid');
+  if (!/^0x[0-9a-fA-F]{64}$/.test(String(salt || ''))) throw new Error('Launch salt is invalid');
   return {
     name: String(draft.name).trim().slice(0, 64),
     symbol: String(draft.symbol).trim().replace(/^\$/, '').toUpperCase().slice(0, 12),
@@ -96,7 +96,7 @@ function normalizeDraft(draft, expectedEconomics) {
     creatorTaxBps: Number(draft.creatorTaxBps || 0),
     buybackEnabled: Boolean(draft.buybackEnabled),
     expectedEconomics,
-    salt: `0x${crypto.randomBytes(32).toString('hex')}`
+    salt
   };
 }
 
@@ -136,58 +136,60 @@ export async function dryRunDraft(draft) {
   }
 }
 
-export async function launchFromDraft(draft) {
-  if (String(process.env.ENABLE_ONCHAIN_LAUNCH || 'false').toLowerCase() !== 'true') {
-    throw new Error('Onchain launching is disabled. Set ENABLE_ONCHAIN_LAUNCH=true after testing');
-  }
-
-  const key = getPrivateKey(true);
-  const account = privateKeyToAccount(key);
+// Builds the exact unsigned launchToken transaction for the customer's own wallet to sign.
+// The backend never holds keys for this path — it only resolves current on-chain
+// parameters (fee, economics, tax cap) and encodes the call.
+export async function buildLaunchTransaction(draft, { launchConfigId, salt }) {
   const client = publicClient();
-  const walletClient = createWalletClient({ account, chain: robinhood, transport: http(RPC, { timeout: 15_000 }) });
-  const { id: launchConfigId, config } = await resolveLaunchConfig(client);
+  const id = BigInt(launchConfigId);
+  const config = await client.readContract({ address: FACTORY, abi: factoryAbi, functionName: 'getLaunchConfig', args: [id] });
+  if (!config.enabled) throw new Error(`Pons launch config ${id} is disabled`);
 
-  const [allowed, expectedEconomics, launchFee, maxCreatorTaxBps, balance] = await Promise.all([
-    client.readContract({ address: FACTORY, abi: factoryAbi, functionName: 'canLaunch', args: [account.address] }),
-    client.readContract({ address: FACTORY, abi: factoryAbi, functionName: 'previewLaunchEconomics', args: [launchConfigId, zeroAddress] }),
+  const [expectedEconomics, launchFee, maxCreatorTaxBps] = await Promise.all([
+    client.readContract({ address: FACTORY, abi: factoryAbi, functionName: 'previewLaunchEconomics', args: [id, zeroAddress] }),
     client.readContract({ address: FACTORY, abi: factoryAbi, functionName: 'launchFee' }),
-    client.readContract({ address: FACTORY, abi: factoryAbi, functionName: 'maxCreatorTaxBps' }),
-    client.getBalance({ address: account.address })
+    client.readContract({ address: FACTORY, abi: factoryAbi, functionName: 'maxCreatorTaxBps' })
   ]);
 
-  if (!allowed) throw new Error('Pons v2 launch gate rejected the launcher wallet');
-  if (!config.enabled) throw new Error(`Pons launch config ${launchConfigId} is disabled`);
   if (Number(draft.creatorTaxBps || 0) > Number(maxCreatorTaxBps)) {
     throw new Error(`Creator tax exceeds Pons maximum of ${(Number(maxCreatorTaxBps) / 100).toFixed(2)}%`);
   }
-  if (balance <= launchFee) throw new Error(`Launcher wallet needs more ETH. Launch fee is ${formatEther(launchFee)} ETH plus gas`);
 
-  const params = normalizeDraft(draft, expectedEconomics);
-  const simulation = await client.simulateContract({
-    account,
-    address: FACTORY,
+  const params = normalizeDraft(draft, expectedEconomics, salt);
+  const data = encodeFunctionData({
     abi: factoryAbi,
     functionName: 'launchToken',
-    args: [params, launchConfigId, zeroAddress],
-    value: launchFee
+    args: [params, id, zeroAddress]
   });
 
-  const hash = await walletClient.writeContract(simulation.request);
-  const receipt = await client.waitForTransactionReceipt({ hash, confirmations: 1, timeout: 90_000 });
-  if (receipt.status !== 'success') throw new Error('Launch transaction reverted');
+  return {
+    to: FACTORY,
+    data,
+    value: `0x${launchFee.toString(16)}`,
+    chainIdHex: `0x${(4663).toString(16)}`,
+    chainName: robinhood.name,
+    rpcUrl: RPC,
+    explorerUrl: EXPLORER,
+    launchFeeEth: formatEther(launchFee)
+  };
+}
+
+// Single non-blocking receipt check — safe to call repeatedly from client polling.
+export async function getReceiptStatus(txHash) {
+  const client = publicClient();
+  let receipt;
+  try {
+    receipt = await client.getTransactionReceipt({ hash: txHash });
+  } catch {
+    return { state: 'pending' };
+  }
+  if (!receipt) return { state: 'pending' };
+  if (receipt.status !== 'success') return { state: 'reverted' };
 
   const events = parseEventLogs({ abi: factoryAbi, logs: receipt.logs, eventName: 'TokenLaunched', strict: false });
   const event = events.find(e => e.eventName === 'TokenLaunched');
   const token = event?.args?.token;
   const curve = event?.args?.curve;
-  if (!token) throw new Error(`Transaction succeeded but TokenLaunched could not be decoded. Tx: ${hash}`);
-
-  return {
-    hash,
-    token,
-    curve,
-    launchConfigId: launchConfigId.toString(),
-    explorer: `${EXPLORER}/token/${token}`,
-    transaction: `${EXPLORER}/tx/${hash}`
-  };
+  if (!token) return { state: 'reverted' };
+  return { state: 'success', token, curve };
 }
