@@ -1,4 +1,4 @@
-# LAUNCH/SMS
+# imessage.fun
 
 A deployable SMS-first token launcher for **Pons v2 on Robinhood Chain**.
 

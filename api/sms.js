@@ -48,7 +48,7 @@ export default async function handler(req, res) {
     return json(res, 200, { ok: true });
   } catch (error) {
     console.error('sms flow error', error);
-    try { await sendSms({ lineId, to: from, body: `LAUNCH/SMS error: ${error.message}` }); } catch {}
+    try { await sendSms({ lineId, to: from, body: `imessage.fun error: ${error.message}` }); } catch {}
     return json(res, 500, { ok: false, error: error.message });
   }
 }
