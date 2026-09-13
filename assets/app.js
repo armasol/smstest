@@ -32,6 +32,28 @@ async function hydrateConfig() {
 }
 hydrateConfig();
 
+const siteCountdown = document.getElementById('siteCountdown');
+const siteCountdownTime = document.getElementById('siteCountdownTime');
+let countdownEndsAt = null;
+function paintSiteCountdown() {
+  if (!countdownEndsAt) { if (siteCountdown) siteCountdown.hidden = true; return; }
+  const remaining = Math.max(0, (new Date(countdownEndsAt).getTime() - Date.now()) / 1000);
+  if (remaining <= 0) { countdownEndsAt = null; if (siteCountdown) siteCountdown.hidden = true; return; }
+  if (siteCountdown) siteCountdown.hidden = false;
+  if (siteCountdownTime) siteCountdownTime.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}`;
+}
+async function syncSiteCountdown() {
+  try {
+    const response = await fetch('/api/countdown', { cache: 'no-store' });
+    const data = await response.json();
+    countdownEndsAt = data.endsAt || null;
+    paintSiteCountdown();
+  } catch {}
+}
+syncSiteCountdown();
+setInterval(syncSiteCountdown, 15000);
+setInterval(paintSiteCountdown, 1000);
+
 const toast = document.getElementById('toast');
 document.querySelectorAll('.copy-number').forEach(button => {
   button.addEventListener('click', async () => {

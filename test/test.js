@@ -40,3 +40,29 @@ async function send(text) {
 
 form.addEventListener('submit', e => { e.preventDefault(); send(input.value); });
 document.querySelectorAll('[data-quick]').forEach(button => button.addEventListener('click', () => send(button.dataset.quick)));
+
+const countdownTrigger = document.getElementById('countdownTrigger');
+const countdownStatus = document.getElementById('countdownStatus');
+const countdownLabel = countdownTrigger?.querySelector('span');
+countdownTrigger?.addEventListener('click', async () => {
+  countdownTrigger.disabled = true;
+  countdownStatus.textContent = 'Starting sitewide countdown…';
+  try {
+    const response = await fetch('/api/countdown', { method: 'POST' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Unable to start countdown');
+    countdownStatus.textContent = 'Live across the site for 10 minutes.';
+    window.dispatchEvent(new CustomEvent('countdown:updated', { detail: data }));
+  } catch (error) {
+    countdownStatus.textContent = error.message;
+  } finally {
+    countdownTrigger.disabled = false;
+  }
+});
+
+function paintCountdown(endsAt) {
+  const remaining = Math.max(0, (new Date(endsAt).getTime() - Date.now()) / 1000);
+  if (countdownLabel) countdownLabel.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}`;
+  if (remaining <= 0) countdownStatus.textContent = 'Countdown is idle.';
+}
+window.addEventListener('countdown:updated', event => paintCountdown(event.detail.endsAt));
