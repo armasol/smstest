@@ -42,11 +42,13 @@ form.addEventListener('submit', e => { e.preventDefault(); send(input.value); })
 document.querySelectorAll('[data-quick]').forEach(button => button.addEventListener('click', () => send(button.dataset.quick)));
 
 const countdownTrigger = document.getElementById('countdownTrigger');
+const countdownReset = document.getElementById('countdownReset');
 const countdownStatus = document.getElementById('countdownStatus');
 const countdownLabel = countdownTrigger?.querySelector('span');
-countdownTrigger?.addEventListener('click', async () => {
+async function resetCountdown() {
   countdownTrigger.disabled = true;
-  countdownStatus.textContent = 'Starting sitewide countdown…';
+  countdownReset.disabled = true;
+  countdownStatus.textContent = 'Resetting sitewide countdown…';
   try {
     const response = await fetch('/api/countdown', { method: 'POST' });
     const data = await response.json();
@@ -57,8 +59,11 @@ countdownTrigger?.addEventListener('click', async () => {
     countdownStatus.textContent = error.message;
   } finally {
     countdownTrigger.disabled = false;
+    countdownReset.disabled = false;
   }
-});
+}
+countdownTrigger?.addEventListener('click', resetCountdown);
+countdownReset?.addEventListener('click', resetCountdown);
 
 function paintCountdown(endsAt) {
   const remaining = Math.max(0, (new Date(endsAt).getTime() - Date.now()) / 1000);
