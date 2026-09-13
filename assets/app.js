@@ -6,8 +6,23 @@ const smooth = (a, b, x) => {
 };
 const windowed = (x, a, b, c, d) => smooth(a, b, x) * (1 - smooth(c, d, x));
 
+const expiredLaunchNumber = '+1 821-218-5906';
 let publicPhone = '';
 let publicDisplay = 'TEXT TO LAUNCH';
+
+function renderPublicPhone(display, phone = publicPhone) {
+  document.querySelectorAll('.public-phone').forEach(el => {
+    el.textContent = display;
+    if (el.matches('.copy-number')) el.dataset.number = phone;
+  });
+  document.querySelectorAll('.sms-link').forEach(a => {
+    if (!phone) {
+      a.href = '/docs#start';
+      return;
+    }
+    a.href = `sms:${phone}?&body=${encodeURIComponent('LAUNCH')}`;
+  });
+}
 
 async function hydrateConfig() {
   try {
@@ -17,30 +32,38 @@ async function hydrateConfig() {
     publicDisplay = c.display || c.phone || 'TEXT TO LAUNCH';
   } catch {}
 
-  document.querySelectorAll('.public-phone').forEach(el => {
-    el.textContent = publicDisplay;
-    if (el.matches('.copy-number')) el.dataset.number = publicPhone;
-  });
-  document.querySelectorAll('.sms-link').forEach(a => {
-    if (!publicPhone) {
-      a.href = '/docs#start';
-      return;
-    }
-    const body = encodeURIComponent('LAUNCH');
-    a.href = `sms:${publicPhone}?&body=${body}`;
-  });
+  renderPublicPhone(publicDisplay);
 }
 hydrateConfig();
 
 const siteCountdown = document.getElementById('siteCountdown');
+const siteCountdownLabel = document.getElementById('siteCountdownLabel');
 const siteCountdownTime = document.getElementById('siteCountdownTime');
 let countdownEndsAt = null;
 function paintSiteCountdown() {
-  if (!countdownEndsAt) { if (siteCountdown) siteCountdown.hidden = true; return; }
+  if (!countdownEndsAt) {
+    if (siteCountdown) siteCountdown.hidden = false;
+    if (siteCountdownLabel) siteCountdownLabel.textContent = 'CONNECT NUMBER';
+    if (siteCountdownTime) {
+      siteCountdownTime.textContent = expiredLaunchNumber;
+      siteCountdownTime.href = `sms:${expiredLaunchNumber.replace(/[^+\d]/g, '')}?&body=${encodeURIComponent('LAUNCH')}`;
+    }
+    renderPublicPhone(expiredLaunchNumber, expiredLaunchNumber.replace(/[^+\d]/g, ''));
+    return;
+  }
   const remaining = Math.max(0, (new Date(countdownEndsAt).getTime() - Date.now()) / 1000);
-  if (remaining <= 0) { countdownEndsAt = null; if (siteCountdown) siteCountdown.hidden = true; return; }
+  if (remaining <= 0) {
+    countdownEndsAt = null;
+    paintSiteCountdown();
+    return;
+  }
   if (siteCountdown) siteCountdown.hidden = false;
-  if (siteCountdownTime) siteCountdownTime.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}`;
+  if (siteCountdownLabel) siteCountdownLabel.textContent = 'NUMBER LAUNCH IN';
+  if (siteCountdownTime) {
+    siteCountdownTime.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}`;
+    siteCountdownTime.removeAttribute('href');
+  }
+  renderPublicPhone(publicDisplay);
 }
 async function syncSiteCountdown() {
   try {

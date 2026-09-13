@@ -45,6 +45,7 @@ const countdownTrigger = document.getElementById('countdownTrigger');
 const countdownReset = document.getElementById('countdownReset');
 const countdownStatus = document.getElementById('countdownStatus');
 const countdownLabel = countdownTrigger?.querySelector('span');
+let countdownEndsAt = null;
 async function resetCountdown() {
   countdownTrigger.disabled = true;
   countdownReset.disabled = true;
@@ -65,9 +66,20 @@ async function resetCountdown() {
 countdownTrigger?.addEventListener('click', resetCountdown);
 countdownReset?.addEventListener('click', resetCountdown);
 
-function paintCountdown(endsAt) {
-  const remaining = Math.max(0, (new Date(endsAt).getTime() - Date.now()) / 1000);
-  if (countdownLabel) countdownLabel.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}`;
-  if (remaining <= 0) countdownStatus.textContent = 'Countdown is idle.';
+function paintCountdown(endsAt = countdownEndsAt) {
+  countdownEndsAt = endsAt || null;
+  const remaining = countdownEndsAt ? Math.max(0, (new Date(countdownEndsAt).getTime() - Date.now()) / 1000) : 0;
+  if (countdownLabel) countdownLabel.textContent = remaining > 0 ? `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(Math.floor(remaining % 60)).padStart(2, '0')}` : '10:00';
+  if (countdownStatus) countdownStatus.textContent = remaining > 0 ? 'Live across the site for 10 minutes.' : 'Countdown is idle. Reset it to 10:00.';
+}
+async function syncCountdown() {
+  try {
+    const response = await fetch('/api/countdown', { cache: 'no-store' });
+    const data = await response.json();
+    paintCountdown(data.endsAt);
+  } catch {}
 }
 window.addEventListener('countdown:updated', event => paintCountdown(event.detail.endsAt));
+syncCountdown();
+setInterval(() => paintCountdown(), 1000);
+setInterval(syncCountdown, 15000);
