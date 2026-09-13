@@ -39,11 +39,23 @@ hydrateConfig();
 const siteCountdown = document.getElementById('siteCountdown');
 const siteCountdownLabel = document.getElementById('siteCountdownLabel');
 const siteCountdownTime = document.getElementById('siteCountdownTime');
+const siteCountdownNote = document.getElementById('siteCountdownNote');
+const siteStatusValue = document.getElementById('siteStatusValue');
 let countdownEndsAt = null;
+let launchStatus = 'NOT LAUNCHED';
+let statusEnabled = true;
 let countdownEnabled = true;
 function paintSiteCountdown() {
-  if (!countdownEnabled) {
+  if (!countdownEnabled && !statusEnabled) {
     if (siteCountdown) siteCountdown.hidden = true;
+    return;
+  }
+  if (!countdownEnabled) {
+    if (siteCountdown) siteCountdown.hidden = false;
+    if (siteCountdownLabel) siteCountdownLabel.textContent = 'STATUS';
+    if (siteCountdownNote) siteCountdownNote.textContent = 'Launch updates are shared sitewide.';
+    if (siteCountdownTime) { siteCountdownTime.textContent = ''; siteCountdownTime.removeAttribute('href'); }
+    if (siteStatusValue) siteStatusValue.textContent = statusEnabled ? launchStatus : '';
     return;
   }
   if (!countdownEndsAt) {
@@ -76,6 +88,11 @@ async function syncSiteCountdown() {
     const data = await response.json();
     countdownEnabled = data.enabled !== false;
     countdownEndsAt = data.endsAt || null;
+    const statusResponse = await fetch('/api/status-control', { cache: 'no-store' });
+    const statusData = await statusResponse.json();
+    statusEnabled = statusData.enabled !== false;
+    launchStatus = statusData.value || 'NOT LAUNCHED';
+    if (siteStatusValue) siteStatusValue.textContent = statusEnabled ? launchStatus : '';
     paintSiteCountdown();
   } catch {}
 }

@@ -76,6 +76,46 @@ countdownTrigger?.addEventListener('click', resetCountdown);
 countdownReset?.addEventListener('click', resetCountdown);
 countdownToggle?.addEventListener('click', () => updateCountdown(!countdownEnabled, 'Updating sitewide countdown…'));
 
+const statusValue = document.getElementById('statusValue');
+const statusToggle = document.getElementById('statusToggle');
+const statusSave = document.getElementById('statusSave');
+const statusMessage = document.getElementById('statusMessage');
+let statusEnabled = true;
+async function syncStatus() {
+  try {
+    const response = await fetch('/api/status-control', { cache: 'no-store' });
+    const data = await response.json();
+    statusEnabled = data.enabled !== false;
+    if (statusValue) statusValue.value = data.value || 'NOT LAUNCHED';
+    paintStatus();
+  } catch {}
+}
+function paintStatus(message) {
+  if (statusToggle) {
+    statusToggle.textContent = statusEnabled ? 'STATUS ON' : 'STATUS OFF';
+    statusToggle.setAttribute('aria-pressed', String(statusEnabled));
+  }
+  if (statusMessage && message) statusMessage.textContent = message;
+}
+async function saveStatus() {
+  statusSave.disabled = true;
+  statusToggle.disabled = true;
+  statusMessage.textContent = 'Updating sitewide status…';
+  try {
+    const response = await fetch('/api/status-control', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: statusValue.value, enabled: statusEnabled }) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Unable to update status');
+    statusEnabled = data.enabled !== false;
+    statusValue.value = data.value;
+    paintStatus(statusEnabled ? 'Status is live across the site.' : 'Status is off across the site.');
+  } catch (error) { statusMessage.textContent = error.message; }
+  finally { statusSave.disabled = false; statusToggle.disabled = false; }
+}
+statusToggle?.addEventListener('click', () => { statusEnabled = !statusEnabled; paintStatus(); saveStatus(); });
+statusSave?.addEventListener('click', saveStatus);
+syncStatus();
+setInterval(syncStatus, 15000);
+
 function paintCountdown(endsAt = countdownEndsAt, enabled = countdownEnabled) {
   countdownEndsAt = endsAt || null;
   countdownEnabled = enabled !== false;
