@@ -1,7 +1,7 @@
 const messages = document.getElementById('testerMessages');
 const form = document.getElementById('testerForm');
 const input = document.getElementById('testerInput');
-const key = 'launchsms-test-session';
+const key = 'imessagefun-test-session';
 let sessionId = localStorage.getItem(key);
 if (!sessionId) {
   sessionId = (crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`).replace(/[^a-zA-Z0-9_-]/g, '');

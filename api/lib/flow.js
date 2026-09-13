@@ -114,7 +114,7 @@ export async function processMessage({ from, body, forceDryRun = false }) {
     }
     session = { stage: 'collect', step: 0, draft: {}, startedAt: Date.now() };
     await setSession(from, session, SESSION_TTL);
-    return { reply: `LAUNCH/SMS\nLaunch a token from this thread.${dryRun ? '\nTEST MODE — no transaction will be sent.' : ''}\n\n${STEPS[0].prompt}` };
+    return { reply: `imessage.fun\nLaunch a token from this thread.${dryRun ? '\nTEST MODE — no transaction will be sent.' : ''}\n\n${STEPS[0].prompt}` };
   }
 
   if (upper === 'BACK') {
