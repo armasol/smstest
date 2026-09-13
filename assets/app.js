@@ -40,7 +40,12 @@ const siteCountdown = document.getElementById('siteCountdown');
 const siteCountdownLabel = document.getElementById('siteCountdownLabel');
 const siteCountdownTime = document.getElementById('siteCountdownTime');
 let countdownEndsAt = null;
+let countdownEnabled = true;
 function paintSiteCountdown() {
+  if (!countdownEnabled) {
+    if (siteCountdown) siteCountdown.hidden = true;
+    return;
+  }
   if (!countdownEndsAt) {
     if (siteCountdown) siteCountdown.hidden = false;
     if (siteCountdownLabel) siteCountdownLabel.textContent = 'CONNECT NUMBER';
@@ -69,6 +74,7 @@ async function syncSiteCountdown() {
   try {
     const response = await fetch('/api/countdown', { cache: 'no-store' });
     const data = await response.json();
+    countdownEnabled = data.enabled !== false;
     countdownEndsAt = data.endsAt || null;
     paintSiteCountdown();
   } catch {}
