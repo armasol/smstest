@@ -42,6 +42,7 @@ const siteCountdownTime = document.getElementById('siteCountdownTime');
 const siteCountdownNote = document.getElementById('siteCountdownNote');
 const siteStatusValue = document.getElementById('siteStatusValue');
 let countdownEndsAt = null;
+let countdownMinutes = 5;
 let launchStatus = 'NOT LAUNCHED';
 let statusEnabled = true;
 let countdownEnabled = true;
@@ -87,6 +88,7 @@ async function syncSiteCountdown() {
     const response = await fetch('/api/countdown', { cache: 'no-store' });
     const data = await response.json();
     countdownEnabled = data.enabled !== false;
+    countdownMinutes = data.minutes || countdownMinutes;
     countdownEndsAt = data.endsAt || null;
     const statusResponse = await fetch('/api/status-control', { cache: 'no-store' });
     const statusData = await statusResponse.json();

@@ -23,9 +23,10 @@
       </section>
       <section class="tester-control" aria-label="Sitewide launch control">
         <div class="section-label">SITEWIDE LAUNCH WINDOW</div>
-        <h2>Start a 10-minute countdown.</h2>
-        <p>When triggered, every open page shows the same live countdown. Triggering it again resets the window.</p>
-        <div class="countdown-actions"><button class="countdown-trigger" id="countdownTrigger" type="button">TRIGGER COUNTDOWN <span>10:00</span></button><button class="countdown-reset" id="countdownReset" type="button">RESET TO 10:00</button><button class="countdown-toggle" id="countdownToggle" type="button" aria-pressed="true">COUNTDOWN ON</button></div>
+        <h2>Start a custom countdown.</h2>
+        <p>Choose any duration from 1 to 10 minutes. Every open page shows the same live countdown.</p>
+        <div class="countdown-actions"><label class="duration-control" for="countdownMinutes">MINUTES<select id="countdownMinutes" aria-label="Countdown duration in minutes"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></label><button class="countdown-trigger" id="countdownTrigger" type="button">TRIGGER COUNTDOWN <span>05:00</span></button><button class="countdown-reset" id="countdownReset" type="button">RESET TIMER</button><button class="countdown-toggle" id="countdownToggle" type="button" aria-pressed="true">COUNTDOWN ON</button></div>
+        <p class="using-number">iMessage number: <strong>+1 821-218-5906</strong></p>
         <p class="countdown-status" id="countdownStatus" role="status" aria-live="polite">Countdown is idle.</p><div class="status-control"><label for="statusValue">SITEWIDE STATUS</label><div class="status-input-row"><input id="statusValue" maxlength="80" value="NOT LAUNCHED" aria-label="Sitewide status" /><button class="countdown-toggle" id="statusToggle" type="button" aria-pressed="true">STATUS ON</button></div><button class="countdown-reset" id="statusSave" type="button">UPDATE STATUS</button><p class="countdown-status" id="statusMessage" role="status" aria-live="polite">Status is live across the site.</p></div>
       </section>
       <section class="tester-phone" aria-label="SMS simulator">
