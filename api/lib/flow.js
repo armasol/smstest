@@ -90,7 +90,7 @@ function validateStep(step, input) {
 
 function review(draft, dryRun) {
   const links = [draft.website, draft.twitter, draft.telegram, draft.discord, draft.farcaster].filter(Boolean).length;
-  return `REVIEW\n${draft.name} · $${draft.symbol}\n${draft.description}\nCreator: ${draft.creatorFeeRecipient.slice(0, 8)}…${draft.creatorFeeRecipient.slice(-6)}\nTax: ${(draft.creatorTaxBps / 100).toFixed(2)}% · Buyback: ${draft.buybackEnabled ? 'ON' : 'OFF'} · Links: ${links}\nNetwork: Robinhood Chain\n\nReply CONFIRM to ${dryRun ? 'run a safe test' : 'launch'}. Reply BACK to edit or CANCEL.`;
+  return `REVIEW\n${draft.name} · $${draft.symbol}\n${draft.description}\nCreator: ${draft.creatorFeeRecipient.slice(0, 8)}…${draft.creatorFeeRecipient.slice(-6)}\nTax: ${(draft.creatorTaxBps / 100).toFixed(2)}% · Buyback: ${draft.buybackEnabled ? 'ON' : 'OFF'} · Links: ${links}\nNetwork: Solana\n\nReply CONFIRM to ${dryRun ? 'run a safe test' : 'launch'}. Reply BACK to edit or CANCEL.`;
 }
 
 export async function processMessage({ from, body, forceDryRun = false }) {

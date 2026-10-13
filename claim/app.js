@@ -97,7 +97,7 @@
   async function pollForConfirmation(txHash) {
     if (polling) return;
     polling = true;
-    setStatus('Waiting for confirmation on Robinhood Chain…');
+    setStatus('Waiting for confirmation on Solana…');
     for (let attempt = 0; attempt < 40; attempt++) {
       await new Promise((resolve) => setTimeout(resolve, 4000));
       try {

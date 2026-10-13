@@ -1,6 +1,6 @@
 # imessage.fun
 
-A deployable SMS-first token launcher for **Pons v2 on Robinhood Chain**.
+A deployable SMS-first token launcher for **Pons v2 on Solana**.
 
 The user texts `LAUNCH`, answers guided questions, reviews the token, and replies `CONFIRM`. This is a **fully non-custodial** flow: the server never holds a launcher private key and never signs anything on the customer's behalf. Instead, after `CONFIRM` we text a one-time link — *"Your token is ready. Tap to launch."* — that opens the customer's own wallet with the exact Pons `launchToken` transaction pre-filled. They approve it themselves, we watch the chain, and we text back the result.
 
@@ -27,7 +27,7 @@ This is more trust-minimized than a custodial launcher wallet, but it means ever
 
 1. Customer texts `LAUNCH`, answers the prompts, reviews, replies `CONFIRM`.
 2. Server creates a `launch_claims` row (draft, a fresh launch salt, 30-minute expiry) and texts back `https://YOUR-DOMAIN.com/claim/<token>`.
-3. Customer opens the link on their phone. `claim/app.js` connects to `window.ethereum` (MetaMask, Rabby, Coinbase Wallet, etc.), switches/adds Robinhood Chain, and asks the wallet to send the exact `launchToken` transaction returned by `GET /api/claim/:token`.
+3. Customer opens the link on their phone. `claim/app.js` connects to `window.ethereum` (MetaMask, Rabby, Coinbase Wallet, etc.), switches/adds Solana, and asks the wallet to send the exact `launchToken` transaction returned by `GET /api/claim/:token`.
 4. The wallet shows the customer the real transaction (contract, calldata, value) — the same approval step Pons' own site would show.
 5. Once submitted, the page polls `POST /api/claim/:token` with the `txHash`. The server checks the receipt, and on success/revert sends the final SMS and marks the claim `confirmed`/`failed`.
 6. If the customer never opens the link, or the transaction never confirms, no funds move and no token is created — the claim just expires.
